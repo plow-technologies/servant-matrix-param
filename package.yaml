@@ -1,0 +1,17 @@
+name: servant-matrix-param
+version: "0.1"
+
+dependencies:
+  - base < 5
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs:
+      - test
+    dependencies:
+      - hspec
+
+library:
+  source-dirs:
+    - src
