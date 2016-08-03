@@ -20,7 +20,7 @@ library
       Servant.MatrixParam
   if flag(with-servant-aeson-specs)
     build-depends:
-        servant-aeson-specs == 0.2.*
+        servant-aeson-specs == 0.2.* || == 0.3.*
     exposed-modules:
         Servant.MatrixParam.AesonSpecs
 
@@ -35,7 +35,7 @@ test-suite spec
       base < 5
     , hspec
     , servant == 0.5
-    , servant-aeson-specs == 0.2.*
+    , servant-aeson-specs
     , servant-matrix-param
   other-modules:
       Servant.MatrixParam.AesonSpecsSpec
