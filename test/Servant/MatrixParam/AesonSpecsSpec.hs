@@ -16,7 +16,7 @@ spec = do
   it "has an instance for HasGenericSpecs" $ do
     usedTypes matrixParamApi `shouldBe` [boolRep]
 
-matrixParamApi :: Proxy (MatrixParam "foo" String :> Get '[JSON] Bool)
+matrixParamApi :: Proxy (WithMatrixParams "path" '[MatrixParam "foo" String] :> Get '[JSON] Bool)
 matrixParamApi = Proxy
 
 boolRep :: TypeRep

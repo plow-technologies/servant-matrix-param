@@ -7,6 +7,8 @@ packages:
     extra-dep: true
 extra-deps:
   - servant-0.5
+  - servant-server-0.5
 flags:
   servant-matrix-param:
     with-servant-aeson-specs: true
+    with-servant-server: true

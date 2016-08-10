@@ -12,5 +12,5 @@ import           Servant.Aeson.Internal
 
 import           Servant.MatrixParam
 
-instance HasGenericSpecs api => HasGenericSpecs (MatrixParam name a :> api) where
+instance HasGenericSpecs api => HasGenericSpecs (WithMatrixParams path params :> api) where
   collectRoundtripSpecs Proxy = collectRoundtripSpecs (Proxy :: Proxy api)
