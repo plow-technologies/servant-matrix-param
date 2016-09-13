@@ -1,11 +1,11 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE GADTs #-}
 
 module Servant.MatrixParam.ServerSpec where
 
 import           Control.Monad.IO.Class
-import           Control.Monad.Trans.Except
 import           Data.ByteString.Lazy
 import           Data.Map.Strict
 import           Data.Proxy
@@ -18,8 +18,7 @@ import           Servant.Server
 import           Test.Hspec
 
 import           Servant.MatrixParam
-import           Servant.MatrixParam.Server ()
-import           Servant.MatrixParam.Server.Internal
+import           Servant.MatrixParam.Internal
 
 type Api =
        WithMatrixParams "a" '[MatrixParam "name" String] :> Get '[PlainText] String
@@ -29,16 +28,14 @@ type Api =
 api :: Proxy Api
 api = Proxy
 
-type Handler = ExceptT ServantErr IO
-
 server :: Server Api
 server = a :<|> b
   where
-    a :: Maybe String -> Handler String
-    a p = return $ show p
+    a :: MatrixParams "a" '[MatrixParam "name" String] -> Handler String
+    a (p :.: MatrixEmpty) = return $ show p
 
-    b :: Maybe Int -> Maybe Int -> Handler String
-    b foo bar = return $ show (foo, bar)
+    b :: MatrixParams "b" '[MatrixParam "foo" Int, MatrixParam "bar" Int] -> Handler String
+    b (foo :.: bar :.: MatrixEmpty) = return $ show (foo, bar)
 
 testWithPath :: [Text] -> ByteString -> IO ()
 testWithPath segments expected = do

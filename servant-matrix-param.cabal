@@ -14,16 +14,6 @@ source-repository head
   type: git
   location: https://github.com/plow-technologies/servant-matrix-param
 
-flag with-servant-aeson-specs
-  description: support for servant-aeson-specs
-  manual: True
-  default: False
-
-flag with-servant-server
-  description: support for servant-server
-  manual: True
-  default: False
-
 library
   default-language: Haskell2010
   ghc-options: -Wall
@@ -33,22 +23,11 @@ library
       base < 5
     , servant >= 0.5 && < 0.10
     , http-api-data >= 0.2 && <0.4
+    , text == 1.*
+    , containers == 0.5.*
   exposed-modules:
       Servant.MatrixParam
-  if flag(with-servant-aeson-specs)
-    build-depends:
-        servant-aeson-specs >= 0.2 && < 0.6
-    exposed-modules:
-        Servant.MatrixParam.AesonSpecs
-  if flag(with-servant-server)
-    build-depends:
-      servant-server >= 0.5 && < 0.10,
-      containers,
-      string-conversions,
-      text
-    exposed-modules:
-      Servant.MatrixParam.Server
-      Servant.MatrixParam.Server.Internal
+      Servant.MatrixParam.Internal
 
 test-suite spec
   default-language: Haskell2010
@@ -73,7 +52,6 @@ test-suite spec
     , transformers
     , aeson
   other-modules:
-      Servant.MatrixParam.AesonSpecsSpec
       Servant.MatrixParam.ServerSpec
       Servant.MatrixParamSpec
 
