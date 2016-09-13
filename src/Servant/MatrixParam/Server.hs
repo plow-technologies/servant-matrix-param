@@ -57,11 +57,11 @@ instance (KnownSymbol path, MatrixParamList params, HasServer api context) =>
     AddMatrixParams params (ServerT api m)
 
   route Proxy context delayed =
-    DynamicRouter $ \ first -> case parsePathSegment first of
+    CaptureRouter $ \ first -> case parsePathSegment first of
       Just segment -> if wantedPath == segmentPath segment
         then route apiProxy context $ routeMatrixParams paramsProxy (getSegmentParams segment) delayed
-        else LeafRouter $ \ _request respond -> respond $ Fail err404
-      Nothing -> LeafRouter $ \ _request respond -> respond $ Fail err400
+        else delayedFail err404
+      Nothing -> delayedFail err400
     where
       apiProxy :: Proxy api
       apiProxy = Proxy
@@ -72,11 +72,29 @@ instance (KnownSymbol path, MatrixParamList params, HasServer api context) =>
       wantedPath :: Text
       wantedPath = cs $ symbolVal (Proxy :: Proxy path)
 
+-- addCapture (f e) go
+-- go will generate an hlist
+-- f will transform function into hlist-taking one
+data MList a where
+  MNil :: MList '[]
+  MCons :: Maybe a -> MList as -> MList (Matrix key a ': as)
+
+class FromSegmentMap a where
+  fromSegmentMap :: Map Text Text -> a
+
+instance FromSegmentMap (HList '[]) where
+  fromSegmentMap _ = HNil
+
+instance (FromHttpApiData (WithMatrixParams as))
+  => FromHttpApiData (WithMatrixParams path (a ': as)) where
+  parseUrlPiece t =
+
+
 class MatrixParamList (params :: [*]) where
   type AddMatrixParams params a :: *
 
-  routeMatrixParams :: Proxy params -> Map Text Text
-    -> Delayed (AddMatrixParams params a) -> Delayed a
+  routeMatrixParams :: Proxy params ->
+    Delayed env (AddMatrixParams params a) -> Delayed env a
 
 instance MatrixParamList '[] where
   type AddMatrixParams '[] a = a
@@ -89,13 +107,13 @@ instance (KnownSymbol key, FromHttpApiData value, MatrixParamList rest) =>
   type AddMatrixParams (MatrixParam key value ': rest) a =
     Maybe value -> AddMatrixParams rest a
 
-  routeMatrixParams Proxy params delayed =
-    routeMatrixParams restProxy params $
-    addCapture delayed $ case lookup key params of
-      Nothing -> return $ Route Nothing
+  routeMatrixParams Proxy delayed =
+    routeMatrixParams restProxy $
+    addCapture delayed $ \txt -> case parsePathSegment txt of case lookup key params of
+      Nothing -> delayedFail err400
       Just rawValue -> case parseQueryParam rawValue of
-        Right value -> return $ Route $ Just value
-        Left _ -> return $ Route Nothing
+        Right value -> return $ Just value
+        Left _ -> delayedFail err400
     where
       key :: Text
       key = cs $ symbolVal (Proxy :: Proxy key)

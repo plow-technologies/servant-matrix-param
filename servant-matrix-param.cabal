@@ -31,17 +31,18 @@ library
       src
   build-depends:
       base < 5
-    , servant == 0.5
+    , servant >= 0.5 && < 0.10
+    , http-api-data >= 0.2 && <0.4
   exposed-modules:
       Servant.MatrixParam
   if flag(with-servant-aeson-specs)
     build-depends:
-        servant-aeson-specs == 0.2.* || == 0.3.* || == 0.4.*
+        servant-aeson-specs >= 0.2 && < 0.6
     exposed-modules:
         Servant.MatrixParam.AesonSpecs
   if flag(with-servant-server)
     build-depends:
-      servant-server == 0.5,
+      servant-server >= 0.5 && < 0.10,
       containers,
       string-conversions,
       text
@@ -59,7 +60,7 @@ test-suite spec
   build-depends:
       base < 5
     , hspec
-    , servant == 0.5
+    , servant >= 0.5 && < 0.10
     , servant-aeson-specs
     , servant-matrix-param
     , servant-server
@@ -85,5 +86,5 @@ test-suite doctest
       test
   build-depends:
       base < 5
-    , servant == 0.5
+    , servant >= 0.5 && < 0.10
     , doctest
