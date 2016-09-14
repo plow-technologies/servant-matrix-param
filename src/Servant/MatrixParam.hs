@@ -2,7 +2,8 @@
 module Servant.MatrixParam (
   WithMatrixParams,
   MatrixParams(..),
-  MatrixParam
+  MatrixParam,
+  unmatrix
 ) where
 
 

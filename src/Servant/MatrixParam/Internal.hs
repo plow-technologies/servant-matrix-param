@@ -1,14 +1,17 @@
-{-# LANGUAGE DataKinds            #-}
-{-# LANGUAGE DeriveDataTypeable   #-}
-{-# LANGUAGE FlexibleContexts     #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE GADTs                #-}
-{-# LANGUAGE OverloadedStrings    #-}
-{-# LANGUAGE PolyKinds            #-}
-{-# LANGUAGE ScopedTypeVariables  #-}
-{-# LANGUAGE TypeOperators        #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DataKinds              #-}
+{-# LANGUAGE DeriveDataTypeable     #-}
+{-# LANGUAGE FlexibleContexts       #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GADTs                  #-}
+{-# LANGUAGE MultiParamTypeClasses  #-}
+{-# LANGUAGE OverloadedStrings      #-}
+{-# LANGUAGE PolyKinds              #-}
+{-# LANGUAGE ScopedTypeVariables    #-}
+{-# LANGUAGE TypeOperators          #-}
+{-# LANGUAGE UndecidableInstances   #-}
 
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
 module Servant.MatrixParam.Internal where
 
 import           Data.List       (foldl')
@@ -42,6 +45,32 @@ data MatrixParams (path :: Symbol) (paramSpecs :: [*]) where
     deriving (Typeable)
 infixr 3 :.:
 
+class Unmatrix ls a | ls -> a where
+  -- | @unmatrix@ tranforms a 'MatrixParams' of @n@ 'MatrixParam' into a
+  -- corresponding n-tuple:
+  --
+  -- >>> unmatrix (Just 5 :.: MatrixEmpty :: MatrixParams "x" '[MatrixParam "y" Int])
+  -- Just 5
+  --
+  -- This is helpful particularly when type-inference fails, or to avoid
+  -- spurious non-exhaustiveness-in-patterns warnings.
+  unmatrix :: MatrixParams p ls -> a
+
+instance Unmatrix '[] () where unmatrix _ = ()
+instance Unmatrix '[MatrixParam s a] (Maybe a) where
+  unmatrix (a :.: MatrixEmpty) = a
+instance Unmatrix '[MatrixParam sa a, MatrixParam sb b] (Maybe a, Maybe b) where
+  unmatrix (a :.: b :.: MatrixEmpty) = (a, b)
+instance Unmatrix '[MatrixParam sa a, MatrixParam sb b, MatrixParam sc c]
+    (Maybe a, Maybe b, Maybe c) where
+  unmatrix (a :.: b :.: c :.: MatrixEmpty) = (a, b, c)
+instance Unmatrix '[MatrixParam sa a, MatrixParam sb b, MatrixParam sc c, MatrixParam sd d]
+    (Maybe a, Maybe b, Maybe c, Maybe d) where
+  unmatrix (a :.: b :.: c :.: d :.: MatrixEmpty) = (a, b, c, d)
+instance Unmatrix '[MatrixParam sa a, MatrixParam sb b, MatrixParam sc c, MatrixParam sd d, MatrixParam se e]
+    (Maybe a, Maybe b, Maybe c, Maybe d, Maybe e) where
+  unmatrix (a :.: b :.: c :.: d :.: e :.: MatrixEmpty) = (a, b, c, d, e)
+
 instance (KnownSymbol path, ParseMatrix (MatrixParams path ls))
       => FromHttpApiData (MatrixParams path ls) where
   parseUrlPiece t = case parsePathSegment t of
@@ -67,7 +96,8 @@ instance ( ParseMatrix (MatrixParams path as)
     where
       seg = T.pack $ symbolVal (Proxy :: Proxy seg)
 
-
+-- | And individual matrix parameter. Meant to be used in conjunction with
+-- 'WithMatrixParams'.
 data MatrixParam (key :: Symbol) a
     deriving (Typeable)
 

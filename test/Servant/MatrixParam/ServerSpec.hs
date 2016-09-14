@@ -29,13 +29,13 @@ api :: Proxy Api
 api = Proxy
 
 server :: Server Api
-server = a :<|> b
+server = a . unmatrix :<|> b . unmatrix
   where
-    a :: MatrixParams "a" '[MatrixParam "name" String] -> Handler String
-    a (p :.: MatrixEmpty) = return $ show p
+    a :: Maybe String -> Handler String
+    a p = return $ show p
 
-    b :: MatrixParams "b" '[MatrixParam "foo" Int, MatrixParam "bar" Int] -> Handler String
-    b (foo :.: bar :.: MatrixEmpty) = return $ show (foo, bar)
+    b :: (Maybe Int, Maybe Int) -> Handler String
+    b (foo, bar) = return $ show (foo, bar)
 
 testWithPath :: [Text] -> ByteString -> IO ()
 testWithPath segments expected = do
