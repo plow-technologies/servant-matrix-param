@@ -12,6 +12,7 @@ import           Data.Map.Strict
 import           Data.Maybe
 import           Data.Text
 
+
 data MatrixSegment
   = MatrixSegment {
     segmentPath :: Text,
