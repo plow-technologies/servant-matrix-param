@@ -31,23 +31,25 @@ library
       src
   build-depends:
       base < 5
-    , servant == 0.5
+    , servant >= 0.7 && < 0.10
   exposed-modules:
       Servant.MatrixParam
   if flag(with-servant-aeson-specs)
     build-depends:
-        servant-aeson-specs == 0.2.* || == 0.3.* || == 0.4.*
+        servant-aeson-specs > 0.2 && < 0.6
     exposed-modules:
         Servant.MatrixParam.AesonSpecs
   if flag(with-servant-server)
     build-depends:
-      servant-server == 0.5,
+      servant-server >= 0.7 && < 0.10,
+      http-api-data >= 0.2 && < 0.4,
       containers,
       string-conversions,
       text
     exposed-modules:
       Servant.MatrixParam.Server
       Servant.MatrixParam.Server.Internal
+      Servant.MatrixParam.Server.Internal.ArgList
 
 test-suite spec
   default-language: Haskell2010
@@ -59,7 +61,7 @@ test-suite spec
   build-depends:
       base < 5
     , hspec
-    , servant == 0.5
+    , servant >= 0.7 && < 0.10
     , servant-aeson-specs
     , servant-matrix-param
     , servant-server
@@ -85,5 +87,5 @@ test-suite doctest
       test
   build-depends:
       base < 5
-    , servant == 0.5
+    , servant >= 0.7 && < 0.10
     , doctest

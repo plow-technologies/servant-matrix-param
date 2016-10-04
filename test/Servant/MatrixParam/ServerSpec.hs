@@ -5,7 +5,6 @@
 module Servant.MatrixParam.ServerSpec where
 
 import           Control.Monad.IO.Class
-import           Control.Monad.Trans.Except
 import           Data.ByteString.Lazy
 import           Data.Map.Strict
 import           Data.Proxy
@@ -28,8 +27,6 @@ type Api =
 
 api :: Proxy Api
 api = Proxy
-
-type Handler = ExceptT ServantErr IO
 
 server :: Server Api
 server = a :<|> b

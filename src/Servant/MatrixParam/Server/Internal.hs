@@ -12,6 +12,7 @@ import           Data.Map.Strict
 import           Data.Maybe
 import           Data.Text
 
+
 data MatrixSegment
   = MatrixSegment {
     segmentPath :: Text,
@@ -37,7 +38,7 @@ parsePair pair = case splitOn "=" pair of
   [flag] -> Just (flag, Nothing)
   _ -> Nothing
 
-collectPairs :: forall a b . Show b => Ord a => [(a, Maybe b)] -> Map a b
+collectPairs :: forall a b . Ord a => [(a, Maybe b)] -> Map a b
 collectPairs =
   Data.List.foldl'
     (\ acc (k, mv) -> maybe acc (\ v -> insert k v acc) mv)

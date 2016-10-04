@@ -5,6 +5,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE RecordWildCards #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -38,7 +39,6 @@ module Servant.MatrixParam.Server where
 
 import           Prelude hiding (lookup)
 
-import           Data.Map.Strict
 import           Data.Proxy
 import           Data.String.Conversions
 import           Data.Text as T hiding (last)
@@ -49,56 +49,38 @@ import           Servant.Server.Internal
 
 import           Servant.MatrixParam
 import           Servant.MatrixParam.Server.Internal
+import           Servant.MatrixParam.Server.Internal.ArgList
 
-instance (KnownSymbol path, MatrixParamList params, HasServer api context) =>
+instance (KnownSymbol path, HasServer api context
+        , App (Unapped params (ServerT api Handler)) params
+        , Apped (Unapped params (ServerT api Handler)) params ~ ServerT api Handler
+        , ParseArgs params
+        ) =>
   HasServer (WithMatrixParams path params :> api) context where
 
   type ServerT (WithMatrixParams path params :> api) m =
-    AddMatrixParams params (ServerT api m)
+    Unapped params (ServerT api m)
 
   route Proxy context delayed =
-    DynamicRouter $ \ first -> case parsePathSegment first of
-      Just segment -> if wantedPath == segmentPath segment
-        then route apiProxy context $ routeMatrixParams paramsProxy (getSegmentParams segment) delayed
-        else LeafRouter $ \ _request respond -> respond $ Fail err404
-      Nothing -> LeafRouter $ \ _request respond -> respond $ Fail err400
+    CaptureRouter $
+        route (Proxy :: Proxy api)
+              context
+              (addMatrices delayed $ \ txt -> case parsePathSegment txt of
+                 Nothing -> delayedFail err400
+                 Just segment -> if wantedPath == segmentPath segment
+                   then return $ (parseArgs $ getSegmentParams segment :: ArgList params)
+                   else delayedFail err400
+              )
     where
-      apiProxy :: Proxy api
-      apiProxy = Proxy
-
-      paramsProxy :: Proxy params
-      paramsProxy = Proxy
-
       wantedPath :: Text
       wantedPath = cs $ symbolVal (Proxy :: Proxy path)
 
-class MatrixParamList (params :: [*]) where
-  type AddMatrixParams params a :: *
-
-  routeMatrixParams :: Proxy params -> Map Text Text
-    -> Delayed (AddMatrixParams params a) -> Delayed a
-
-instance MatrixParamList '[] where
-  type AddMatrixParams '[] a = a
-
-  routeMatrixParams Proxy _ delayed = delayed
-
-instance (KnownSymbol key, FromHttpApiData value, MatrixParamList rest) =>
-  MatrixParamList (MatrixParam key value ': rest) where
-
-  type AddMatrixParams (MatrixParam key value ': rest) a =
-    Maybe value -> AddMatrixParams rest a
-
-  routeMatrixParams Proxy params delayed =
-    routeMatrixParams restProxy params $
-    addCapture delayed $ case lookup key params of
-      Nothing -> return $ Route Nothing
-      Just rawValue -> case parseQueryParam rawValue of
-        Right value -> return $ Route $ Just value
-        Left _ -> return $ Route Nothing
-    where
-      key :: Text
-      key = cs $ symbolVal (Proxy :: Proxy key)
-
-      restProxy :: Proxy rest
-      restProxy = Proxy
+addMatrices :: App fn argList => Delayed env fn
+           -> (captured -> DelayedIO (ArgList argList))
+           -> Delayed (captured, env) (Apped fn argList)
+addMatrices Delayed{..} new =
+  Delayed
+    { capturesD = \ (txt, env) -> (,) <$> capturesD env <*> new txt
+    , serverD   = \ (x, v) a b req -> (`apply` v)  <$> serverD x a b req
+    , ..
+    }

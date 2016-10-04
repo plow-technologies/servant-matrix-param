@@ -1,11 +1,10 @@
-resolver: nightly-2016-10-04
+resolver: lts-6.10
 packages:
   - '.'
 extra-deps:
-- servant-aeson-specs-0.5.2.0
-- servant-0.9
-- servant-server-0.9
-- http-api-data-0.3.1
+- servant-aeson-specs-0.4.1
+- servant-0.7.1
+- servant-server-0.7.1
 flags:
   servant-matrix-param:
     with-servant-aeson-specs: true
