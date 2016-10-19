@@ -31,10 +31,10 @@ instance
      path = symbolVal (Proxy :: Proxy path)
 
 -- This is just a dummy used to keep track of whether we have already processed
--- the leading path. If we are in a WMP instance, we have already delt with the
--- leading path, and can just proceed recursive over the matrix params. If not,
--- we deal with the leading path, and call the WMP instance. WMP itself should
--- not be exported.
+-- the leading path. If we are in a WMP instance, we have already dealt with
+-- the leading path, and can just proceed recursively over the matrix params.
+-- If not, we deal with the leading path, and call the WMP instance. WMP itself
+-- should not be exported.
 data WMP (p :: Symbol) (x :: [*])
 
 instance

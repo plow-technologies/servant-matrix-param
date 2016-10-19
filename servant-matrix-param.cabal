@@ -58,9 +58,10 @@ library
       Servant.MatrixParam.Server.Internal
       Servant.MatrixParam.Server.Internal.ArgList
 
-  if flag(with-servant-server)
+  if flag(with-servant-client)
     build-depends:
-      servant-client
+      servant-client,
+      text
     exposed-modules:
       Servant.MatrixParam.Client
       Servant.MatrixParam.Client.Internal
