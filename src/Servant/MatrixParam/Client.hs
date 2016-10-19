@@ -27,9 +27,13 @@ instance
 
   clientWithRoute Proxy req =
     clientWithRoute (Proxy :: Proxy (WMP path mat :> api))
-                    req { reqPath = reqPath req ++ path }
+                    req { reqPath = reqPath req ++ "/" ++ path }
     where
      path = symbolVal (Proxy :: Proxy path)
+
+-- This is just a dummy used to keep track of whether we have already processed
+-- the leading path.
+data WMP (p :: Symbol) (x :: [*])
 
 instance
   ( HasClient (WMP path rest :> api)
@@ -59,20 +63,3 @@ instance
 
   clientWithRoute Proxy req =
     clientWithRoute (Proxy :: Proxy api) req
-
-
-data WMP (p :: Symbol) (x :: [*])
-
-
-{-
-instance AddMatrixParam '[] where
-  addMatrixParam _ = id
-
-instance ( KnownSymbol key, AddMatrixParam as
-         ) => AddMatrixParam (MatrixParam key a ': as) where
-  addMatrixParam (x :.: xs) req = case x of
-    Nothing  -> req
-    Just val -> req { reqPath = reqPath req ++ ";" ++ pname ++ "=" ++ val }
-    where
-      pname = symbolVal (Proxy :: Proxy key)
--}

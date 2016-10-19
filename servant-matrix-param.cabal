@@ -80,6 +80,7 @@ test-suite spec
     , servant-server
     , servant-client
     , wai
+    , warp
     , containers
     , text
     , wai-extra
