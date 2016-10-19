@@ -63,6 +63,7 @@ library
       servant-client
     exposed-modules:
       Servant.MatrixParam.Client
+      Servant.MatrixParam.Client.Internal
 
 test-suite spec
   default-language: Haskell2010
