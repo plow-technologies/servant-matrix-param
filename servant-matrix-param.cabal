@@ -24,6 +24,11 @@ flag with-servant-server
   manual: True
   default: False
 
+flag with-servant-client
+  description: support for servant-server
+  manual: True
+  default: False
+
 library
   default-language: Haskell2010
   ghc-options: -Wall
@@ -34,11 +39,13 @@ library
     , servant >= 0.7 && < 0.10
   exposed-modules:
       Servant.MatrixParam
+
   if flag(with-servant-aeson-specs)
     build-depends:
         servant-aeson-specs > 0.2 && < 0.6
     exposed-modules:
         Servant.MatrixParam.AesonSpecs
+
   if flag(with-servant-server)
     build-depends:
       servant-server >= 0.7 && < 0.10,
@@ -50,6 +57,14 @@ library
       Servant.MatrixParam.Server
       Servant.MatrixParam.Server.Internal
       Servant.MatrixParam.Server.Internal.ArgList
+
+  if flag(with-servant-client)
+    build-depends:
+      servant-client,
+      text
+    exposed-modules:
+      Servant.MatrixParam.Client
+      Servant.MatrixParam.Client.Internal
 
 test-suite spec
   default-language: Haskell2010
@@ -65,17 +80,21 @@ test-suite spec
     , servant-aeson-specs
     , servant-matrix-param
     , servant-server
+    , servant-client
     , wai
+    , warp
     , containers
     , text
     , wai-extra
     , http-types
+    , http-client
     , bytestring
     , transformers
     , aeson
   other-modules:
       Servant.MatrixParam.AesonSpecsSpec
       Servant.MatrixParam.ServerSpec
+      Servant.MatrixParam.ClientSpec
       Servant.MatrixParamSpec
 
 test-suite doctest

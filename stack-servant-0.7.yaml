@@ -9,3 +9,4 @@ flags:
   servant-matrix-param:
     with-servant-aeson-specs: true
     with-servant-server: true
+    with-servant-client: true
