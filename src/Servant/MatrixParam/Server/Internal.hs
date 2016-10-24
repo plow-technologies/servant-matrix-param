@@ -7,7 +7,6 @@ module Servant.MatrixParam.Server.Internal (
   parsePathSegment,
 ) where
 
-import           Data.List (foldl')
 import           Data.Map.Strict
 import           Data.Maybe
 import           Data.Text
@@ -16,11 +15,11 @@ import           Data.Text
 data MatrixSegment
   = MatrixSegment {
     segmentPath :: Text,
-    segmentParams :: Maybe (Map Text Text)
+    segmentParams :: Maybe (Map Text (Maybe Text))
   }
   deriving (Show, Eq)
 
-getSegmentParams :: MatrixSegment -> Map Text Text
+getSegmentParams :: MatrixSegment -> Map Text (Maybe Text)
 getSegmentParams = fromMaybe mempty . segmentParams
 
 parsePathSegment :: Text -> Maybe MatrixSegment
@@ -30,16 +29,10 @@ parsePathSegment segment = case splitOn ";" segment of
   [path, ""] -> return $ MatrixSegment path mempty
   (path : pairs) ->
     Just $ MatrixSegment path $
-      fmap collectPairs $ mapM parsePair pairs
+      fmap fromList $ mapM parsePair pairs
 
 parsePair :: Text -> Maybe (Text, Maybe Text)
 parsePair pair = case splitOn "=" pair of
   [key, value] -> Just (key, Just value)
   [flag] -> Just (flag, Nothing)
   _ -> Nothing
-
-collectPairs :: forall a b . Ord a => [(a, Maybe b)] -> Map a b
-collectPairs =
-  Data.List.foldl'
-    (\ acc (k, mv) -> maybe acc (\ v -> insert k v acc) mv)
-    mempty
