@@ -75,6 +75,31 @@ instance (KnownSymbol path, HasServer api context
       wantedPath :: Text
       wantedPath = cs $ symbolVal (Proxy :: Proxy path)
 
+instance (KnownSymbol path, HasServer api context
+        , App (Unapped params (ServerT api Handler)) params
+        , FromHttpApiData captureType
+        , Apped (Unapped params (ServerT api Handler)) params ~ ServerT api Handler
+        , ParseArgs params
+        ) =>
+  HasServer (CaptureWithMatrixParams path captureType params :> api) context where
+
+  type ServerT (CaptureWithMatrixParams path captureType params :> api) m =
+    Unapped params (ServerT api m)
+
+  route Proxy context delayed =
+    CaptureRouter $
+        route (Proxy :: Proxy api)
+              context
+              (addMatrices delayed $ \ txt -> case parsePathSegment txt of
+                 Nothing -> delayedFail err400
+                 Just segment -> case parseUrlPiece (segmentPath segment) of
+                   Left _ -> delayedFail err400
+                   Right (value :: captureType) -> return $ (parseArgs $ getSegmentParams segment :: ArgList params)
+              )
+    where
+      wantedPath :: Text
+      wantedPath = cs $ symbolVal (Proxy :: Proxy path)
+
 addMatrices :: App fn argList => Delayed env fn
            -> (captured -> DelayedIO (ArgList argList))
            -> Delayed (captured, env) (Apped fn argList)
