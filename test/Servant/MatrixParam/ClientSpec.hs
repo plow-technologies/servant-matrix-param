@@ -47,15 +47,21 @@ spec = do
       cliA Nothing `hasRequestPath` "/a"
       cliB Nothing Nothing `hasRequestPath` "/b"
 
+    it "can be combined with captures" $ do
+      cliC 5 (Just 3) Nothing `hasRequestPath` "/5;foo=3"
+
+
 #if MIN_VERSION_servant_client(0,9,0)
     it "generates paths that servant-server understands" $ do
       testWithApplication (return $ serve api server) $ \port -> do
-        let res = (,) <$> cliA (Just "There is a there there")
-                      <*> cliB (Just 1) (Just 2)
+        let res = (,,) <$> cliA (Just "There is a there there")
+                       <*> cliB (Just 1) (Just 2)
+                       <*> cliC 5 (Just 1) (Just 2)
+
             url = BaseUrl Http "localhost" port ""
         mgr' <- newManager defaultManagerSettings
         runClientM res (ClientEnv mgr' url)
-          `shouldReturn` Right ("There is a there there", "3")
+          `shouldReturn` Right ("There is a there there", "3", "8")
 #endif
 ------------------------------------------------------------------------------
 -- API
