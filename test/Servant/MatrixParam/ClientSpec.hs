@@ -65,6 +65,8 @@ type Api =
        WithMatrixParams "a" '[MatrixParam "name" String] :> Get '[JSON] String
   :<|> WithMatrixParams "b" '[MatrixParam "foo" Int, MatrixParam "bar" Int]
          :> Get '[JSON] String
+  :<|> CaptureWithMatrixParams "c" Int '[MatrixParam "foo" Int, MatrixParam "bar" Int]
+         :> Get '[JSON] String
 
 api :: Proxy Api
 api = Proxy
@@ -72,10 +74,11 @@ api = Proxy
 
 #if MIN_VERSION_servant_client(0,9,0)
 server :: Server Api
-server = e1 :<|> e2
+server = e1 :<|> e2 :<|> e3
   where
     e1 name = return $ fromMaybe "" name
     e2 foo bar = return . show $ fromMaybe 0 foo + fromMaybe 0 bar
+    e3 int foo bar = return . show $ int + fromMaybe 0 foo + fromMaybe 0 bar
 #endif
 
 ------------------------------------------------------------------------------
@@ -122,8 +125,10 @@ mgr = unsafePerformIO . newManager $ defaultManagerSettings
 #if MIN_VERSION_servant_client(0,9,0)
 cliA :: Maybe String -> ClientM String
 cliB :: Maybe Int -> Maybe Int -> ClientM String
+cliC :: Int -> Maybe Int -> Maybe Int -> ClientM String
 #else
 cliA :: Maybe String -> Manager -> BaseUrl -> ClientM String
 cliB :: Maybe Int -> Maybe Int -> Manager -> BaseUrl -> ClientM String
+cliC :: Int -> Maybe Int -> Maybe Int -> Manager -> BaseUrl -> ClientM String
 #endif
-cliA :<|> cliB = client api
+cliA :<|> cliB :<|> cliC = client api
