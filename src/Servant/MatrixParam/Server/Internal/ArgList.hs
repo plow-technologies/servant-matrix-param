@@ -21,7 +21,9 @@ import           Web.HttpApiData     (FromHttpApiData, parseQueryParamMaybe)
 -- An HList that stores the arguments to a function
 data ArgList a where
   NoArgs :: ArgList '[]
+  -- A matrix param (always optional)
   (:.:)  :: Maybe a -> ArgList as -> ArgList (MatrixParam key a ': as)
+  -- A matrix flag
   (:?:)  :: Bool -> ArgList as -> ArgList (MatrixFlag key ': as)
 
 type family Unapped (params :: [*]) end where

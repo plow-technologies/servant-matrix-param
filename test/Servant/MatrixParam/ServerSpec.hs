@@ -26,12 +26,14 @@ type Api =
          :> Get '[PlainText] String
   :<|> WithMatrixParams "c" '[MatrixParam "foo" Int, MatrixFlag "baz", MatrixParam "bar" Int]
          :> Get '[PlainText] String
+  :<|> CaptureWithMatrixParams "d" Int '[MatrixParam "foo" Int, MatrixFlag "baz"]
+         :> Get '[PlainText] String
 
 api :: Proxy Api
 api = Proxy
 
 server :: Server Api
-server = a :<|> b :<|> c
+server = a :<|> b :<|> c :<|> d
   where
     a :: Maybe String -> Handler String
     a p = return $ show p
@@ -42,6 +44,10 @@ server = a :<|> b :<|> c
     c :: Maybe Int -> Bool -> Maybe Int -> Handler String
     c foo baz bar | baz = return $ show (foo, bar)
                   | otherwise = return ""
+
+    d :: Int -> Maybe Int -> Bool -> Handler String
+    d capture foo baz | baz = return $ show capture
+                      | otherwise = return $ show foo
 
 testWithPath :: [Text] -> ByteString -> IO ()
 testWithPath segments expected = do
@@ -80,6 +86,11 @@ spec = do
 
     it "allows to overwrite matrix params" $ do
       testWithPath ["a;name=alice;name=bob"] "Just \"bob\""
+
+    context "with capture" $
+      it "parses the capture " $ do
+        testWithPath ["5;baz"] "5"
+        testWithPath ["5;foo=3"] "Just 3"
 
 
   describe "parsePathSegment" $ do

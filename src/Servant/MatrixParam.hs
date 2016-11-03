@@ -5,6 +5,7 @@
 
 module Servant.MatrixParam (
   WithMatrixParams,
+  CaptureWithMatrixParams,
   MatrixParam,
   MatrixFlag,
 ) where
@@ -12,7 +13,12 @@ module Servant.MatrixParam (
 import           Data.Typeable (Typeable)
 import           GHC.TypeLits  (Symbol)
 
+-- | A static path followed by one or more matrix parameters.
 data WithMatrixParams (path :: Symbol) (paramSpecs :: [*])
+    deriving (Typeable)
+
+-- | A capture followed by one or more matrix parameters.
+data CaptureWithMatrixParams (path :: Symbol) captureType (paramSpecs :: [*])
     deriving (Typeable)
 
 -- | Expresses matrix parameters for path segments in APIs, e.g.
