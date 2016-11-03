@@ -72,6 +72,25 @@ instance
       key = symbolVal (Proxy :: Proxy k)
 
 instance
+  ( HasClient (WMP rest :> api)
+  , KnownSymbol k
+  ) => HasClient (WMP (MatrixFlag k ': rest) :> api) where
+
+  type Client (WMP (MatrixFlag k ': rest) :> api)
+    = Bool -> Client (WMP rest :> api)
+
+  clientWithRoute Proxy req flag
+    | flag = clientWithRoute nextProxy
+        req { reqPath = reqPath req ++ ";" ++ key }
+    | otherwise = clientWithRoute nextProxy req
+    where
+      nextProxy :: Proxy (WMP rest :> api)
+      nextProxy = Proxy
+
+      key :: String
+      key = symbolVal (Proxy :: Proxy k)
+
+instance
   ( HasClient api
   ) => HasClient (WMP '[] :> api) where
 
