@@ -2,7 +2,9 @@ resolver: nightly-2016-10-04
 packages:
   - '.'
 extra-deps:
-- servant-aeson-specs-0.5.2.0
+- hspec-golden-aeson-0.5.1.0
+- servant-aeson-specs-0.6.0.0
+- quickcheck-arbitrary-adt-0.3.1.0
 - servant-0.9
 - servant-server-0.9
 - http-api-data-0.3.1

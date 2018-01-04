@@ -42,7 +42,7 @@ library
 
   if flag(with-servant-aeson-specs)
     build-depends:
-        servant-aeson-specs > 0.2 && < 0.6
+        servant-aeson-specs > 0.2 && < 0.7
     exposed-modules:
         Servant.MatrixParam.AesonSpecs
 
