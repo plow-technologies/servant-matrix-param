@@ -1,5 +1,5 @@
 name:           servant-matrix-param
-version:        0.3.3
+version:        0.3.4
 synopsis:       Matrix parameter combinator for servant
 description:    Matrix parameter combinator for servant
 category:       Web
@@ -42,7 +42,7 @@ library
 
   if flag(with-servant-aeson-specs)
     build-depends:
-        servant-aeson-specs > 0.2 && < 0.6
+        servant-aeson-specs > 0.2 && < 0.7
     exposed-modules:
         Servant.MatrixParam.AesonSpecs
 
