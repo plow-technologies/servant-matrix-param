@@ -36,7 +36,7 @@ library
       src
   build-depends:
       base < 5
-    , servant >= 0.7 && < 0.10
+    , servant >= 0.7 
   exposed-modules:
       Servant.MatrixParam
 
@@ -48,7 +48,7 @@ library
 
   if flag(with-servant-server)
     build-depends:
-      servant-server >= 0.7 && < 0.10,
+      servant-server >= 0.7 ,
       http-api-data >= 0.2 && < 0.4,
       containers,
       string-conversions,
@@ -61,6 +61,8 @@ library
   if flag(with-servant-client)
     build-depends:
       servant-client,
+      servant-client-core,
+      bytestring,
       text
     exposed-modules:
       Servant.MatrixParam.Client
