@@ -31,11 +31,11 @@ instance
   type Client m (WithMatrixParams path mat :> api)
     = Client m (WMP mat :> api)
 
-  clientWithRoute Proxy req =
-    clientWithRoute (Proxy :: Proxy (WMP mat :> api))
-                    req { requestPath = requestPath req ++ "/" ++ path }
+  clientWithRoute p Proxy req =
+    clientWithRoute p (Proxy :: Proxy (WMP mat :> api))
+                    req { requestPath = (requestPath req) <> "/" <> path }
     where
-     path = symbolVal (Proxy :: Proxy path)
+     path = BS.byteString $ BS.pack $  symbolVal (Proxy :: Proxy path)
 
 instance
   ( HasClient m (WMP mat :> api)
@@ -46,9 +46,9 @@ instance
   type Client m (CaptureWithMatrixParams info captureType mat :> api)
     = captureType -> Client m (WMP mat :> api)
 
-  clientWithRoute Proxy req = \capture ->
-    clientWithRoute (Proxy :: Proxy (WMP mat :> api))
-                    req { requestPath = requestPath req ++ "/" ++ T.unpack (toUrlPiece capture) }
+  clientWithRoute m Proxy req = \capture ->
+    clientWithRoute m (Proxy :: Proxy (WMP mat :> api))
+                    req { requestPath = ( requestPath req) <> "/" <> ((BS.byteString . BS.pack . T.unpack) (toUrlPiece capture) )}
 
 
 -- This is just a dummy used to keep track of whether we have already processed
