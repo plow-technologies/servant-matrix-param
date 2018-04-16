@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -61,6 +62,9 @@ instance (KnownSymbol path, HasServer api context
   type ServerT (WithMatrixParams path params :> api) m =
     Unapped params (ServerT api m)
 
+
+  
+--  hoistServerWithContext _ pc nt s = hoistServerWithContext (Proxy :: Proxy api) pc nt . s
   route Proxy context delayed =
     CaptureRouter $
         route (Proxy :: Proxy api)
@@ -86,6 +90,9 @@ instance (HasServer api context
 
   type ServerT (CaptureWithMatrixParams path captureType params :> api) m =
     captureType -> Unapped params (ServerT api m)
+  
+
+  -- TODO: Write valid hoist context instance   
 
   route Proxy context delayed =
     CaptureRouter $
@@ -99,28 +106,35 @@ instance (HasServer api context
                      $ (value, parseArgs $ getSegmentParams segment :: ArgList params)
               )
 
+
 addMatrices :: App fn argList => Delayed env fn
            -> (captured -> DelayedIO (ArgList argList))
            -> Delayed (captured, env) (Apped fn argList)
 addMatrices Delayed{..} new =
   Delayed
     { capturesD = \ (txt, env) -> (,) <$> capturesD env <*> new txt
-    , serverD   = \ (x, v) a b req -> (`apply` v)  <$> serverD x a b req
+    , serverD   = \ (x, v) params headers a b req -> (`apply` v)  <$> serverD x params headers a b req
     , ..
     }
 
+
+
+
+
 addCapturedMatrices
-  :: ( App restOfFn argList
-     , fn ~ (captureType -> restOfFn)
-     , Apped restOfFn argList ~ result)
-  => Delayed env fn
-  -> (captured -> DelayedIO (captureType, ArgList argList))
-  -> Delayed (captured, env) result
+   :: ( App restOfFn argList
+      , fn ~ (captureType -> restOfFn)
+      , Apped restOfFn argList ~ result)
+   => Delayed env fn
+   -> (captured -> DelayedIO (captureType, ArgList argList))
+   -> Delayed (captured, env) result
+
+
 addCapturedMatrices Delayed{..} new =
   Delayed
     { capturesD = \ (txt, env) -> (,) <$> capturesD env <*> new txt
-    , serverD   = \ (x, (capture, matrixParams)) a b req ->
-        let appCapture = ($ capture) <$> serverD x a b req
+    , serverD   = \ (x, (capture, matrixParams)) params headers a b req ->
+        let appCapture = ($ capture) <$> serverD x params headers a b req
         in (`apply` matrixParams) <$> appCapture
     , ..
     }
