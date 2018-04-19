@@ -78,7 +78,7 @@ test-suite spec
   build-depends:
       base < 5
     , hspec
-    , servant >= 0.7 && < 0.10
+    , servant >= 0.7
     , servant-aeson-specs
     , servant-matrix-param
     , servant-server
@@ -108,5 +108,5 @@ test-suite doctest
       test
   build-depends:
       base < 5
-    , servant >= 0.7 && < 0.10
+    , servant >= 0.7
     , doctest
