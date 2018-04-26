@@ -63,7 +63,7 @@ spec = do
 
             url = BaseUrl Http "localhost" port ""
         mgr' <- newManager defaultManagerSettings
-        runClientM res (ClientEnv mgr' url)
+        runClientM res (ClientEnv mgr' url Nothing)
           `shouldReturn` Right ("There is a there there", "3", "6")
 #endif
 ------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ hasRequestPath :: (Manager -> BaseUrl -> ClientM any) -> ByteString -> IO ()
 hasRequestPath c expectedPath = do
   let anyBurl = BaseUrl Http "localhost" 6660 ""
 #if MIN_VERSION_servant_client(0,9,0)
-  _ <- void (runClientM c $ ClientEnv mgr anyBurl)
+  _ <- void (runClientM c $ ClientEnv mgr anyBurl Nothing)
     `catch` \(_ :: SomeException) -> return ()
 #else
   _ <- void (runExceptT $ c mgr anyBurl)
