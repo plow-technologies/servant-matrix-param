@@ -63,8 +63,9 @@ instance (KnownSymbol path, HasServer api context
     Unapped params (ServerT api m)
 
 
-  
---  hoistServerWithContext _ pc nt s = hoistServerWithContext (Proxy :: Proxy api) pc nt . s
+  -- TODO: implement
+  hoistServerWithContext _ _pc _nt _s = undefined
+
   route Proxy context delayed =
     CaptureRouter $
         route (Proxy :: Proxy api)
@@ -92,7 +93,8 @@ instance (HasServer api context
     captureType -> Unapped params (ServerT api m)
   
 
-  -- TODO: Write valid hoist context instance   
+  -- TODO: implement
+  hoistServerWithContext _ _pc _nt _s = undefined
 
   route Proxy context delayed =
     CaptureRouter $
