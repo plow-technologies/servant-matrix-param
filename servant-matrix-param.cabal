@@ -36,7 +36,7 @@ library
       src
   build-depends:
       base < 5
-    , servant >= 0.7 
+    , servant >= 0.7
   exposed-modules:
       Servant.MatrixParam
 
@@ -62,6 +62,7 @@ library
     build-depends:
       servant-client,
       servant-client-core,
+      http-types >= 0.8,
       bytestring,
       text
     exposed-modules:
