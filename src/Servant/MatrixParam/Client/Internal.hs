@@ -67,7 +67,7 @@ instance
   type Client m (WMP (MatrixParam k v ': rest) :> api)
     = Maybe v -> Client m (WMP rest :> api)
 
-  clientWithRoute p old req x = case x of
+  clientWithRoute p _old req x = case x of
     Nothing -> clientWithRoute p nextProxy req
     Just v  -> clientWithRoute p nextProxy
       (req { requestPath = (requestPath req) <> ";" <> key <> "=" <> (HTTP.urlEncodeBuilder False . T.encodeUtf8) (toQueryParam v) })
