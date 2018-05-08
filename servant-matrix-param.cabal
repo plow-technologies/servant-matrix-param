@@ -1,5 +1,5 @@
 name:           servant-matrix-param
-version:        0.3.6
+version:        0.4.0
 synopsis:       Matrix parameter combinator for servant
 description:    Matrix parameter combinator for servant
 category:       Web
