@@ -10,12 +10,12 @@
 module Servant.MatrixParam.Client.Internal where
 
 import           Data.Proxy
-import qualified Data.Text           as T
+import qualified Data.Text          as T
+import qualified Data.Text.Encoding as T
 import           GHC.TypeLits
 import           Servant.API
 import           Servant.Client
 import qualified Data.ByteString.Builder as BS
-import qualified Data.ByteString.Char8   as BS
 import qualified Network.HTTP.Types.URI as HTTP
 import           Servant.Client.Core
 import           Servant.MatrixParam
@@ -35,7 +35,7 @@ instance
     clientWithRoute p (Proxy :: Proxy (WMP mat :> api))
                     req { requestPath = (requestPath req) <> "/" <> path }
     where
-     path = HTTP.urlEncodeBuilder False $ BS.pack $  symbolVal (Proxy :: Proxy path)
+    path = HTTP.urlEncodeBuilder False . T.encodeUtf8 . T.pack $ symbolVal (Proxy :: Proxy path)
 
 instance
   ( HasClient m (WMP mat :> api)
@@ -48,7 +48,7 @@ instance
 
   clientWithRoute m Proxy req = \capture ->
     clientWithRoute m (Proxy :: Proxy (WMP mat :> api))
-                    req { requestPath = ( requestPath req) <> "/" <> ((HTTP.urlEncodeBuilder False . BS.pack . T.unpack) (toUrlPiece capture) )}
+                    req { requestPath = ( requestPath req) <> "/" <> ((HTTP.urlEncodeBuilder False . T.encodeUtf8) (toUrlPiece capture) )}
 
 
 -- This is just a dummy used to keep track of whether we have already processed
@@ -70,13 +70,13 @@ instance
   clientWithRoute p old req x = case x of
     Nothing -> clientWithRoute p nextProxy req
     Just v  -> clientWithRoute p nextProxy
-      (req { requestPath = (requestPath req) <> ";" <> key <> "=" <> (HTTP.urlEncodeBuilder False . BS.pack . T.unpack) (toQueryParam v) })
+      (req { requestPath = (requestPath req) <> ";" <> key <> "=" <> (HTTP.urlEncodeBuilder False . T.encodeUtf8) (toQueryParam v) })
     where
       nextProxy :: Proxy (WMP rest :> api)
       nextProxy = Proxy
 
       key :: BS.Builder
-      key = HTTP.urlEncodeBuilder False $ BS.pack $ symbolVal (Proxy :: Proxy k)
+      key = HTTP.urlEncodeBuilder False . T.encodeUtf8 . T.pack $ symbolVal (Proxy :: Proxy k)
 
 instance
   ( HasClient m (WMP rest :> api)
@@ -95,7 +95,7 @@ instance
       nextProxy = Proxy
 
       key :: BS.Builder
-      key = HTTP.urlEncodeBuilder False $ BS.pack $ symbolVal (Proxy :: Proxy k)
+      key = HTTP.urlEncodeBuilder False . T.encodeUtf8 . T.pack $ symbolVal (Proxy :: Proxy k)
 
 instance
   ( HasClient m api
