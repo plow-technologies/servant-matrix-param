@@ -2,46 +2,53 @@
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Servant.MatrixParam.Client.Internal where
 
 import           Data.Proxy
-import qualified Data.Text           as T
+import qualified Data.Text          as T
+import qualified Data.Text.Encoding as T
 import           GHC.TypeLits
 import           Servant.API
 import           Servant.Client
-import           Servant.Common.Req
+import qualified Data.ByteString.Builder as BS
+import qualified Network.HTTP.Types.URI as HTTP
+import           Servant.Client.Core
 import           Servant.MatrixParam
+import           Data.Monoid
+
 
 instance
-  ( HasClient (WMP mat :> api)
+  ( HasClient m (WMP mat :> api)
   , KnownSymbol path
   )
-  => HasClient (WithMatrixParams path mat :> api) where
+  => HasClient m (WithMatrixParams path mat :> api) where
 
-  type Client (WithMatrixParams path mat :> api)
-    = Client (WMP mat :> api)
+  type Client m (WithMatrixParams path mat :> api)
+    = Client m (WMP mat :> api)
 
-  clientWithRoute Proxy req =
-    clientWithRoute (Proxy :: Proxy (WMP mat :> api))
-                    req { reqPath = reqPath req ++ "/" ++ path }
+  clientWithRoute p Proxy req =
+    clientWithRoute p (Proxy :: Proxy (WMP mat :> api))
+                    req { requestPath = (requestPath req) <> "/" <> path }
     where
-     path = symbolVal (Proxy :: Proxy path)
+    path = HTTP.urlEncodeBuilder False . T.encodeUtf8 . T.pack $ symbolVal (Proxy :: Proxy path)
 
 instance
-  ( HasClient (WMP mat :> api)
+  ( HasClient m (WMP mat :> api)
   , ToHttpApiData captureType
   )
-  => HasClient (CaptureWithMatrixParams info captureType mat :> api) where
+  => HasClient m (CaptureWithMatrixParams info captureType mat :> api) where
 
-  type Client (CaptureWithMatrixParams info captureType mat :> api)
-    = captureType -> Client (WMP mat :> api)
+  type Client m (CaptureWithMatrixParams info captureType mat :> api)
+    = captureType -> Client m (WMP mat :> api)
 
-  clientWithRoute Proxy req = \capture ->
-    clientWithRoute (Proxy :: Proxy (WMP mat :> api))
-                    req { reqPath = reqPath req ++ "/" ++ T.unpack (toUrlPiece capture) }
+  clientWithRoute m Proxy req = \capture ->
+    clientWithRoute m (Proxy :: Proxy (WMP mat :> api))
+                    req { requestPath = ( requestPath req) <> "/" <> ((HTTP.urlEncodeBuilder False . T.encodeUtf8) (toUrlPiece capture) )}
 
 
 -- This is just a dummy used to keep track of whether we have already processed
@@ -52,49 +59,49 @@ instance
 data WMP (x :: [*])
 
 instance
-  ( HasClient (WMP rest :> api)
+  ( HasClient m (WMP rest :> api)
   , ToHttpApiData v
   , KnownSymbol k
-  ) => HasClient (WMP (MatrixParam k v ': rest) :> api) where
+  ) => HasClient m (WMP (MatrixParam k v ': rest) :> api) where
 
-  type Client (WMP (MatrixParam k v ': rest) :> api)
-    = Maybe v -> Client (WMP rest :> api)
+  type Client m (WMP (MatrixParam k v ': rest) :> api)
+    = Maybe v -> Client m (WMP rest :> api)
 
-  clientWithRoute Proxy req x = case x of
-    Nothing -> clientWithRoute nextProxy req
-    Just v  -> clientWithRoute nextProxy
-      req { reqPath = reqPath req ++ ";" ++ key ++ "=" ++ T.unpack (toQueryParam v) }
+  clientWithRoute p _old req x = case x of
+    Nothing -> clientWithRoute p nextProxy req
+    Just v  -> clientWithRoute p nextProxy
+      (req { requestPath = (requestPath req) <> ";" <> key <> "=" <> (HTTP.urlEncodeBuilder False . T.encodeUtf8) (toQueryParam v) })
     where
       nextProxy :: Proxy (WMP rest :> api)
       nextProxy = Proxy
 
-      key :: String
-      key = symbolVal (Proxy :: Proxy k)
+      key :: BS.Builder
+      key = HTTP.urlEncodeBuilder False . T.encodeUtf8 . T.pack $ symbolVal (Proxy :: Proxy k)
 
 instance
-  ( HasClient (WMP rest :> api)
+  ( HasClient m (WMP rest :> api)
   , KnownSymbol k
-  ) => HasClient (WMP (MatrixFlag k ': rest) :> api) where
+  ) => HasClient m (WMP (MatrixFlag k ': rest) :> api) where
 
-  type Client (WMP (MatrixFlag k ': rest) :> api)
-    = Bool -> Client (WMP rest :> api)
+  type Client m (WMP (MatrixFlag k ': rest) :> api)
+    = Bool -> Client m (WMP rest :> api)
 
-  clientWithRoute Proxy req flag
-    | flag = clientWithRoute nextProxy
-        req { reqPath = reqPath req ++ ";" ++ key }
-    | otherwise = clientWithRoute nextProxy req
+  clientWithRoute p Proxy req flag
+    | flag = clientWithRoute p nextProxy
+        req { requestPath = requestPath req <> ";" <> key }
+    | otherwise = clientWithRoute p nextProxy req
     where
       nextProxy :: Proxy (WMP rest :> api)
       nextProxy = Proxy
 
-      key :: String
-      key = symbolVal (Proxy :: Proxy k)
+      key :: BS.Builder
+      key = HTTP.urlEncodeBuilder False . T.encodeUtf8 . T.pack $ symbolVal (Proxy :: Proxy k)
 
 instance
-  ( HasClient api
-  ) => HasClient (WMP '[] :> api) where
+  ( HasClient m api
+  ) => (HasClient m) (WMP '[] :> api) where
 
-  type Client (WMP '[] :> api) = Client api
-
-  clientWithRoute Proxy req =
-    clientWithRoute (Proxy :: Proxy api) req
+  type Client m (WMP '[] :> api) = Client m api
+ 
+  clientWithRoute Proxy Proxy req =
+    clientWithRoute (Proxy :: Proxy m) (Proxy :: Proxy api) req

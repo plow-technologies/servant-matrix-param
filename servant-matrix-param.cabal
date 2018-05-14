@@ -1,5 +1,5 @@
 name:           servant-matrix-param
-version:        0.3.4
+version:        0.4.0
 synopsis:       Matrix parameter combinator for servant
 description:    Matrix parameter combinator for servant
 category:       Web
@@ -36,7 +36,7 @@ library
       src
   build-depends:
       base < 5
-    , servant >= 0.7 && < 0.10
+    , servant >= 0.7
   exposed-modules:
       Servant.MatrixParam
 
@@ -48,7 +48,7 @@ library
 
   if flag(with-servant-server)
     build-depends:
-      servant-server >= 0.7 && < 0.10,
+      servant-server >= 0.7 ,
       http-api-data >= 0.2 && < 0.4,
       containers,
       string-conversions,
@@ -61,6 +61,9 @@ library
   if flag(with-servant-client)
     build-depends:
       servant-client,
+      servant-client-core,
+      http-types >= 0.8,
+      bytestring,
       text
     exposed-modules:
       Servant.MatrixParam.Client
@@ -76,7 +79,7 @@ test-suite spec
   build-depends:
       base < 5
     , hspec
-    , servant >= 0.7 && < 0.10
+    , servant >= 0.7
     , servant-aeson-specs
     , servant-matrix-param
     , servant-server
@@ -106,5 +109,5 @@ test-suite doctest
       test
   build-depends:
       base < 5
-    , servant >= 0.7 && < 0.10
+    , servant >= 0.7
     , doctest
