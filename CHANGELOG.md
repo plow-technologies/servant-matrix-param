@@ -1,5 +1,8 @@
 # Revision History for servant-matrix-param
 
+# 0.4.0 -- 2018-5-14
+- upgrade to ghc 8.2.2, lts-11.7
+
 # 0.3.6 -- 2018-04-26
 - tests building
 
