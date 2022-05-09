@@ -1,5 +1,7 @@
+
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -7,6 +9,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Servant.MatrixParam.Client.Internal where
 
 import           Data.Proxy
@@ -20,7 +23,6 @@ import qualified Network.HTTP.Types.URI as HTTP
 import           Servant.Client.Core
 import           Servant.MatrixParam
 import           Data.Monoid
-
 
 instance
   ( HasClient m (WMP mat :> api)
