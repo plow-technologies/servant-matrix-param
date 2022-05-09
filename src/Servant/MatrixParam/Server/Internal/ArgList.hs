@@ -7,11 +7,13 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE UndecidableInstances  #-}
+
 module Servant.MatrixParam.Server.Internal.ArgList where
 
 import           Control.Monad       (join)
 import           Data.Char
 import qualified Data.Map            as Map
+import           Data.Kind           (Type)
 import           Data.Proxy
 import qualified Data.Text           as T
 import           GHC.TypeLits        (KnownSymbol, symbolVal)
@@ -26,12 +28,12 @@ data ArgList a where
   -- A matrix flag
   (:?:)  :: Bool -> ArgList as -> ArgList (MatrixFlag key ': as)
 
-type family Unapped (params :: [*]) end where
+type family Unapped (params :: [Type]) end where
   Unapped '[] r = r
   Unapped (MatrixParam key a ': rest) r = Maybe a -> Unapped rest r
   Unapped (MatrixFlag key ': rest) r = Bool -> Unapped rest r
 
-class (Apped (Unapped argList fn) argList ~ fn) => App fn (argList :: [*]) where
+class (Apped (Unapped argList fn) argList ~ fn) => App fn (argList :: [Type]) where
   type Apped fn argList
   -- Applies a function to an ArgList
   apply :: fn -> ArgList argList -> Apped fn argList

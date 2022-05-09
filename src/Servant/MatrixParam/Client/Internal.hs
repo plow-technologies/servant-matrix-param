@@ -13,6 +13,7 @@
 module Servant.MatrixParam.Client.Internal where
 
 import           Data.Proxy
+import           Data.Kind (Type)
 import qualified Data.Text          as T
 import qualified Data.Text.Encoding as T
 import           GHC.TypeLits
@@ -22,7 +23,6 @@ import qualified Data.ByteString.Builder as BS
 import qualified Network.HTTP.Types.URI as HTTP
 import           Servant.Client.Core
 import           Servant.MatrixParam
-import           Data.Monoid
 
 instance
   ( HasClient m (WMP mat :> api)
@@ -39,6 +39,8 @@ instance
     where
     path = HTTP.urlEncodeBuilder False . T.encodeUtf8 . T.pack $ symbolVal (Proxy :: Proxy path)
 
+  hoistClientMonad proxym _ = hoistClientMonad proxym (Proxy :: Proxy (WMP mat :> api))
+
 instance
   ( HasClient m (WMP mat :> api)
   , ToHttpApiData captureType
@@ -52,13 +54,14 @@ instance
     clientWithRoute m (Proxy :: Proxy (WMP mat :> api))
                     req { requestPath = ( requestPath req) <> "/" <> ((HTTP.urlEncodeBuilder False . T.encodeUtf8) (toUrlPiece capture) )}
 
+  hoistClientMonad proxym _ f clf = hoistClientMonad proxym (Proxy :: Proxy (WMP mat :> api)) f . clf
 
 -- This is just a dummy used to keep track of whether we have already processed
 -- the leading path. If we are in a WMP instance, we have already dealt with
 -- the leading path, and can just proceed recursively over the matrix params.
 -- If not, we deal with the leading path, and call the WMP instance. WMP itself
 -- should not be exported.
-data WMP (x :: [*])
+data WMP (x :: [Type])
 
 instance
   ( HasClient m (WMP rest :> api)
@@ -80,6 +83,8 @@ instance
       key :: BS.Builder
       key = HTTP.urlEncodeBuilder False . T.encodeUtf8 . T.pack $ symbolVal (Proxy :: Proxy k)
 
+  hoistClientMonad proxym _ f clf = hoistClientMonad proxym (Proxy :: Proxy (WMP rest :> api)) f . clf
+
 instance
   ( HasClient m (WMP rest :> api)
   , KnownSymbol k
@@ -99,6 +104,8 @@ instance
       key :: BS.Builder
       key = HTTP.urlEncodeBuilder False . T.encodeUtf8 . T.pack $ symbolVal (Proxy :: Proxy k)
 
+  hoistClientMonad proxym _ f clf = hoistClientMonad proxym (Proxy :: Proxy (WMP rest :> api)) f . clf
+
 instance
   ( HasClient m api
   ) => (HasClient m) (WMP '[] :> api) where
@@ -107,3 +114,5 @@ instance
  
   clientWithRoute Proxy Proxy req =
     clientWithRoute (Proxy :: Proxy m) (Proxy :: Proxy api) req
+
+  hoistClientMonad proxym _ = hoistClientMonad proxym (Proxy :: Proxy api)

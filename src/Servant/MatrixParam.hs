@@ -10,15 +10,16 @@ module Servant.MatrixParam (
   MatrixFlag,
 ) where
 
-import           Data.Typeable (Typeable)
-import           GHC.TypeLits  (Symbol)
+import Data.Typeable (Typeable)
+import GHC.TypeLits  (Symbol)
+import Data.Kind (Type)
 
 -- | A static path followed by one or more matrix parameters.
-data WithMatrixParams (path :: Symbol) (paramSpecs :: [*])
+data WithMatrixParams (path :: Symbol) (paramSpecs :: [Type])
     deriving (Typeable)
 
 -- | A capture followed by one or more matrix parameters.
-data CaptureWithMatrixParams (path :: Symbol) captureType (paramSpecs :: [*])
+data CaptureWithMatrixParams (path :: Symbol) captureType (paramSpecs :: [Type])
     deriving (Typeable)
 
 -- | Expresses matrix parameters for path segments in APIs, e.g.

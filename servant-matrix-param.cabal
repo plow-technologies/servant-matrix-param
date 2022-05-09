@@ -31,7 +31,7 @@ flag with-servant-client
 
 library
   default-language: Haskell2010
-  ghc-options: -Wall
+  ghc-options: -Wall -Werror
   hs-source-dirs:
       src
   build-depends:
